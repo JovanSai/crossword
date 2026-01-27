@@ -1,48 +1,22 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import LoginPage from './pages/LoginPage.jsx'
-import CrosswordLanding from './pages/CrosswordLanding.jsx'
-import GridPage from './pages/GridPage.jsx'
+import LandingPage from './pages/LandingPage.jsx'
 import RequireAuth from './auth/RequireAuth.jsx'
-import RoundScoreCard from './pages/RoundScoreCard.jsx'
-
-import ScoreDetails from './pages/ScoreDetails';
-
-
 
 function App() {
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/login" replace />} />
-      <Route path="/login" element={<LoginPage />} />
+      <Route path="/" element={<Navigate to="/auth" replace />} />
+      <Route path="/auth" element={<LoginPage />} />
       <Route
-        path="/landing"
+        path="/home"
         element={
           <RequireAuth>
-            <CrosswordLanding />
+            <LandingPage />
           </RequireAuth>
         }
       />
-      <Route
-        path="/grid"
-        element={
-          <RequireAuth>
-            <GridPage />
-          </RequireAuth>
-        }
-      />
-      <Route
-        path="/score"
-        element={
-        <RequireAuth>
-         <RoundScoreCard />
-          </RequireAuth>
-            }
-          />
-
-      <Route path="*" element={<Navigate to="/login" replace />} />
-
-      <Route path="/score-details" element={<ScoreDetails />} />
-
+      <Route path="*" element={<Navigate to="/auth" replace />} />
     </Routes>
   )
 }

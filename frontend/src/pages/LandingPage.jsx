@@ -22,14 +22,12 @@ function LandingPage() {
 
   async function onLogout() {
     await signOut()
-    navigate('/login')
+    navigate('/auth')
   }
 
   return (
     <div className="landing-shell">
       <div className="landing-topbar">
-        <div className="landing-team">Team No: {user?.team_no ?? '--'}</div>
-
         <div className="dropdown" ref={menuRef}>
           <button
             className="landing-userbtn"
@@ -50,7 +48,6 @@ function LandingPage() {
                   <div className="landing-username">{member?.name || '--'}</div>
                   <div className="landing-userdetail">{member?.email || '--'}</div>
                   <div className="landing-userdetail">{member?.phone || '--'}</div>
-                  <div className="landing-userdetail">{member?.member_id || '--'}</div>
                 </div>
               </div>
             </li>
