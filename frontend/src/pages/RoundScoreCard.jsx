@@ -1,198 +1,47 @@
-// import { useEffect, useState } from 'react';
-// import './roundscorecard.css';
-
-
-
-// import { useNavigate, useLocation } from "react-router-dom";
-
-
-// export default function RoundScoreCard() {
-//   const location = useLocation();
-//   const navigate = useNavigate();
-
-//   const currentRound = location.state?.roundIndex ?? 0;
-
-
-//   const finalScore = location.state?.score || 0;  // ✅ CHANGE THIS
-
-//   const [score, setScore] = useState(0);
-//   const [ringFill, setRingFill] = useState(0);
-
-//   const circumference = 2 * Math.PI * 140; // radius 140px
-
-//   useEffect(() => {
-//     // Animate ring fill
-//     const ringInterval = setInterval(() => {
-//       setRingFill(prev => {
-//         if (prev >= 100) {
-//           clearInterval(ringInterval);
-//           return 100;
-//         }
-//         return prev + 2;
-//       });
-//     }, 30);
-
-//     return () => clearInterval(ringInterval);
-//   }, []);
-
-//   const handleNextRound = () => {
-//   navigate("/grid", {
-//     state: {
-//       roundIndex: currentRound + 1
-//     }
-//   });
-// };
-// const handleExit = () => {
-//   navigate("/landing");
-// };
-
-// const handleShare = () => {
-//   const filledCells = location.state?.filledCells || [];
-//   const blackCells = location.state?.blackCells || [];
-
-//   let output = "🧩 My Crossword Result:\n\n";
-
-//   for (let i = 1; i <= 81; i++) {
-//     if (blackCells.includes(i)) {
-//       output += "⬛";
-//     } else if (filledCells.includes(i)) {
-//       output += "🟦";
-//     } else {
-//       output += "⬜";
-//     }
-
-//     if (i % 9 === 0) output += "\n";
-//   }
-
-//   navigator.clipboard.writeText(output)
-//     .then(() => alert("Copied to clipboard! You can paste it anywhere to share."))
-//     .catch(() => alert("Copy failed. Please try again."));
-// };
-
-
-
-//   useEffect(() => {
-//     // Animate score count
-//     const scoreInterval = setInterval(() => {
-//       setScore(prev => {
-//         if (prev >= finalScore) {
-//           clearInterval(scoreInterval);
-//           return finalScore;
-//         }
-//         return prev + finalScore / 50;
-//       });
-//     }, 30);
-
-//     return () => clearInterval(scoreInterval);
-//   }, []);
-
-//   const strokeDashOffset = circumference - (ringFill / 100) * circumference;
-
-//   return (
-//     <div className="round-score-card">
-//       <h1 className="score-heading">FINAL SCORE</h1>
-
-//       <div className="score-container">
-//         <svg className="score-ring" width="300" height="300" viewBox="0 0 300 300">
-//           {/* Background circle */}
-//           <circle
-//             cx="150"
-//             cy="150"
-//             r="140"
-//             fill="none"
-//             stroke="#E6ECF5"
-//             strokeWidth="18"
-//           />
-//           {/* Animated ring */}
-//           <circle
-//             cx="150"
-//             cy="150"
-//             r="140"
-//             fill="none"
-//             stroke="url(#ringGradient)"
-//             strokeWidth="18"
-//             strokeDasharray={circumference}
-//             strokeDashoffset={strokeDashOffset}
-//             strokeLinecap="round"
-//             className="score-ring-fill"
-//           />
-//           {/* Gradient definition */}
-//           <defs>
-//             <linearGradient id="ringGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-//               <stop offset="0%" stopColor="#3377FF" />
-//               <stop offset="100%" stopColor="#99BBFF" />
-//             </linearGradient>
-//           </defs>
-//         </svg>
-
-//         <div className="score-center">
-//   <p className="score-label">OVERALL ACHIEVEMENT SCORE</p>
-//   <p className="score-number">{Math.round(score)}</p>
-
-//   <p
-//     style={{
-//       marginTop: "10px",
-//       color: "#3377FF",
-//       cursor: "pointer",
-//       fontSize: "14px",
-//       fontWeight: "500"
-//     }}
-//     onClick={() =>
-//       navigate("/score-details", {
-//         state: {
-//           score: finalScore,
-//           correctWords: location.state?.correctWords,
-//           timeRemaining: location.state?.timeRemaining
-//         }
-//       })
-//     }
-//   >
-//     View Details
-//   </p>
-// </div>
-
-
-//       </div>
-
-//       <div className="button-group">
-//        <button className="btn-primary" onClick={handleNextRound}>
-//               Next Round
-//             </button>
-
-//         <button className="btn-secondary" onClick={handleExit}>
-//                     Exit
-//                   </button>
-//         <button className="btn-secondary" onClick={handleShare}>
-//              Share
-//         </button>
-
-//       </div>
-//     </div>
-//   );
-// }
-
-
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import html2canvas from "html2canvas";
+import { useAuth } from "../auth/AuthContext";
+import { RiAccountCircleLine } from "react-icons/ri";
 import "./scorecard.css";
 
 export default function RoundScoreCard() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { signOut } = useAuth();
+  const scorecardRef = useRef(null);
 
   const currentRound = location.state?.roundIndex ?? 0;
   const finalScore = location.state?.score || 0;
+  const cumulativeScore = location.state?.cumulativeScore || 0;
   const correctWords = location.state?.correctWords || 0;
+  const totalWords = location.state?.totalWords || 0;
+  const allWordsCorrect = location.state?.allWordsCorrect || false;
   const timeRemaining = location.state?.timeRemaining || 0;
+  const isAutoSubmit = location.state?.isAutoSubmit || false;
+  const gridData = location.state?.gridData || {};
+  
+  const [showMessage, setShowMessage] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+  const [userProfile, setUserProfile] = useState(null);
 
-  // You can tune these later
-  const timeBonus = timeRemaining;
-  const accuracyScore = correctWords * 10;
+  // Load user profile
+  useEffect(() => {
+    const profile = localStorage.getItem('userProfile');
+    if (profile) {
+      setUserProfile(JSON.parse(profile));
+    }
+  }, []);
+
+  // Calculate time bonus based on correct words
+  const timeBonus = correctWords >= 6 ? timeRemaining * 0.1 : 0;
+  const accuracyScore = correctWords;
   const overallScore = finalScore;
 
   const [displayedTime, setDisplayedTime] = useState(0);
   const [displayedAccuracy, setDisplayedAccuracy] = useState(0);
   const [displayedOverall, setDisplayedOverall] = useState(0);
+  const [ringProgress, setRingProgress] = useState(0);
 
   useEffect(() => {
     const animate = (end, setter) => {
@@ -212,32 +61,115 @@ export default function RoundScoreCard() {
     animate(timeBonus, setDisplayedTime);
     animate(accuracyScore, setDisplayedAccuracy);
     animate(overallScore, setDisplayedOverall);
+    
+    // Animate ring progress from 0 to 100
+    let progress = 0;
+    const ringTimer = setInterval(() => {
+      progress += 2;
+      if (progress >= 100) {
+        setRingProgress(100);
+        clearInterval(ringTimer);
+      } else {
+        setRingProgress(progress);
+      }
+    }, 20);
+    
+    return () => clearInterval(ringTimer);
   }, [timeBonus, accuracyScore, overallScore]);
 
+  useEffect(() => {
+    setTimeout(() => setLoaded(true), 100);
+  }, []);
+
+  useEffect(() => {
+    setTimeout(() => setLoaded(true), 100);
+  }, []);
+
   const handleNextRound = () => {
-    navigate("/grid", { state: { roundIndex: currentRound + 1 } });
-  };
-
-  const handleExit = () => {
-    navigate("/landing");
-  };
-
-  const handleShare = () => {
-    const filledCells = location.state?.filledCells || [];
-    const blackCells = location.state?.blackCells || [];
-
-    let output = "🧩 My Crossword Result:\n\n";
-
-    for (let i = 1; i <= 81; i++) {
-      if (blackCells.includes(i)) output += "⬛";
-      else if (filledCells.includes(i)) output += "🟦";
-      else output += "⬜";
-      if (i % 9 === 0) output += "\n";
+    if (correctWords < 6) {
+      // Show custom message box
+      setShowMessage(true);
+      return;
     }
+    navigate("/grid", { state: { roundIndex: currentRound + 1, cumulativeScore } });
+  };
+  
+  const handleContinue = () => {
+    setShowMessage(false);
+    
+    if (isAutoSubmit) {
+      // Auto-submitted (time ran out) - restart with fresh grid and full time
+      navigate("/grid", { 
+        state: { 
+          roundIndex: currentRound, 
+          cumulativeScore: cumulativeScore - finalScore, 
+          timeRemaining: 300 // Reset to 5 minutes
+        } 
+      });
+    } else {
+      // Manual submit - restore grid progress and remaining time
+      navigate("/grid", { 
+        state: { 
+          roundIndex: currentRound, 
+          cumulativeScore: cumulativeScore - finalScore,
+          gridData: gridData,
+          timeRemaining: timeRemaining // Continue with remaining time
+        } 
+      });
+    }
+  };
 
-    navigator.clipboard.writeText(output)
-      .then(() => alert("Copied to clipboard!"))
-      .catch(() => alert("Copy failed"));
+  const handleExit = async () => {
+    await signOut();
+    navigate("/login");
+  };
+
+  const handleShare = async () => {
+    try {
+      if (scorecardRef.current) {
+        const canvas = await html2canvas(scorecardRef.current, {
+          backgroundColor: '#f4f7ff',
+          scale: 2,
+          logging: false,
+          useCORS: true
+        });
+        
+        // Convert to blob and share/download
+        canvas.toBlob(async (blob) => {
+          const file = new File([blob], `crossword-score-${Date.now()}.png`, { type: 'image/png' });
+          
+          // Try to use Web Share API if available
+          if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+            try {
+              await navigator.share({
+                files: [file],
+                title: 'My Crossword Score',
+                text: `I scored ${cumulativeScore} points in the crossword puzzle!`
+              });
+            } catch (err) {
+              if (err.name !== 'AbortError') {
+                // Fallback to download
+                downloadImage(canvas);
+              }
+            }
+          } else {
+            // Fallback to download
+            downloadImage(canvas);
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Error capturing screenshot:', error);
+      alert('Failed to capture screenshot. Please try again.');
+    }
+  };
+  
+  const downloadImage = (canvas) => {
+    const link = document.createElement('a');
+    link.download = `crossword-score-${Date.now()}.png`;
+    link.href = canvas.toDataURL();
+    link.click();
+    alert('Score card image downloaded successfully!');
   };
 
   // Pie chart math (same as design file)
@@ -263,27 +195,59 @@ export default function RoundScoreCard() {
   };
 
   return (
-    <div className="scorecard-page">
-      <div className="scorecard">
-        <h1 className="heading">Score Card</h1>
+    <div className={`scorecard-page ${loaded ? 'fade-in' : ''}`}>
+      <div className="scorecard" ref={scorecardRef}>
+        <div className="scorecard-header">
+          <h1 className="heading">Score Card</h1>
+          {userProfile && (
+            <div className="account-wrapper">
+              <div className="account-icon">
+                <RiAccountCircleLine size={32} />
+              </div>
+              <div className="account-dropdown">
+                <div className="account-email">{userProfile.email}</div>
+                <button onClick={handleExit} className="dropdown-logout-btn">
+                  Logout
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
 
         <div className="scores">
           <div className="score-item">
             <span className="label">Time Efficiency Bonus</span>
-            <span className="value">{displayedTime}</span>
+            <span className="value">{Math.round(displayedTime)}</span>
           </div>
           <div className="score-item">
             <span className="label">Accuracy Rating</span>
             <span className="value">{displayedAccuracy}</span>
           </div>
+          <div className="score-item">
+            <span className="label">Words Completed</span>
+            <span className="value">{correctWords}/{totalWords}</span>
+          </div>
           <div className="score-item overall">
-            <span className="label">Overall Achievement Score</span>
-            <span className="value">{displayedOverall}</span>
+            <span className="label">Round Score</span>
+            <span className="value">{Math.round(displayedOverall)}</span>
+          </div>
+          <div className="score-item overall" style={{ background: "linear-gradient(135deg, #2659BF 0%, #99BBFF 100%)", color: "white" }}>
+            <span className="label">Final Score</span>
+            <span className="value">{Math.round(cumulativeScore)}</span>
           </div>
         </div>
 
         <div className="chart">
        <svg width="200" height="200" viewBox="0 0 200 200">
+    {/* Gradient Definitions */}
+    <defs>
+      <linearGradient id="scoreGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" style={{ stopColor: "#3377FF", stopOpacity: 1 }} />
+        <stop offset="70%" style={{ stopColor: "#5f95ff", stopOpacity: 1 }} />
+        <stop offset="100%" style={{ stopColor: "#b3d1ff", stopOpacity: 0.5 }} />
+      </linearGradient>
+    </defs>
+    
     {/* Background ring */}
     <circle
       cx="100"
@@ -294,71 +258,105 @@ export default function RoundScoreCard() {
       strokeWidth="18"
     />
 
-    {/* Time Bonus */}
+    {/* Score Progress Ring - Based on correct words out of 10 */}
     <circle
       cx="100"
       cy="100"
       r="80"
       fill="none"
-      stroke="#3377FF"
+      stroke="url(#scoreGradient)"
       strokeWidth="18"
-      strokeDasharray={`${(timeBonus / total) * 2 * Math.PI * 80} ${2 * Math.PI * 80}`}
+      strokeDasharray={`${(ringProgress / 100) * (correctWords / 10) * 2 * Math.PI * 80} ${2 * Math.PI * 80}`}
       strokeLinecap="round"
       transform="rotate(-90 100 100)"
-    />
-
-    {/* Accuracy */}
-    <circle
-      cx="100"
-      cy="100"
-      r="80"
-      fill="none"
-      stroke="#06C270"
-      strokeWidth="18"
-      strokeDasharray={`${(accuracyScore / total) * 2 * Math.PI * 80} ${2 * Math.PI * 80}`}
-      strokeDashoffset={`-${(timeBonus / total) * 2 * Math.PI * 80}`}
-      strokeLinecap="round"
-      transform="rotate(-90 100 100)"
+      style={{ transition: 'stroke-dasharray 0.3s ease' }}
     />
 
     {/* Center score */}
-    <text x="100" y="108" textAnchor="middle" className="chart-score">
-      {displayedOverall}
+    <text x="100" y="95" textAnchor="middle" style={{ fontSize: "12px", fontWeight: "600", fill: "#666" }}>
+      Total Score
+    </text>
+    <text x="100" y="130" textAnchor="middle" className="chart-score">
+      {Math.round(displayedOverall)}
     </text>
   </svg>
-
-  <div className="legend">
-    <div className="legend-item">
-      <span className="legend-color" style={{ background: "#3377FF" }}></span>
-      <span>Time Bonus</span>
-    </div>
-    <div className="legend-item">
-      <span className="legend-color" style={{ background: "#06C270" }}></span>
-      <span>Accuracy</span>
-    </div>
-  </div>
 </div>
 
 
         <div className="buttons">
-          <button className="primary" onClick={handleNextRound}>Next Round</button>
           <button className="secondary" onClick={handleExit}>Exit</button>
           <button className="secondary" onClick={handleShare}>Share</button>
+          <button className="primary" onClick={handleNextRound}>Next Round</button>
         </div>
-
-        <div style={{ marginTop: 10 }}>
-          <span
-            style={{ cursor: "pointer", color: "#3377FF", fontWeight: 600 }}
-            onClick={() =>
-              navigate("/score-details", {
-                state: { correctWords, timeBonus, accuracyScore, overallScore }
-              })
-            }
-          >
-            View Details
-          </span>
+        
+        <div className="buttons secondary-actions">
+          <button className="secondary" onClick={() => navigate("/leaderboard")}>Leaderboard</button>
+          <button className="secondary" onClick={() => navigate("/analytics")}>Analytics</button>
         </div>
       </div>
+      
+      {/* Custom Message Box */}
+      {showMessage && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+        }}>
+          <div style={{
+            backgroundColor: 'white',
+            borderRadius: '12px',
+            padding: '30px',
+            maxWidth: '400px',
+            textAlign: 'center',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+            border: '1px solid #3377FF'
+          }}>
+            <div style={{
+              fontSize: '48px',
+              marginBottom: '15px'
+            }}></div>
+            <h3 style={{
+              color: '#333',
+              marginBottom: '10px',
+              fontSize: '20px'
+            }}>Almost There!</h3>
+            <p style={{
+              color: '#666',
+              marginBottom: '20px',
+              lineHeight: '1.5'
+            }}>
+              You need at least <strong>6 correct words</strong> to move to the next round.
+              <br/>
+              You have <strong>{correctWords}/{totalWords}</strong> correct words.
+            </p>
+            <button
+              onClick={handleContinue}
+              style={{
+                backgroundColor: '#3377FF',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                padding: '12px 32px',
+                fontSize: '16px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'all 0.3s'
+              }}
+              onMouseOver={(e) => e.target.style.backgroundColor = '#2563eb'}
+              onMouseOut={(e) => e.target.style.backgroundColor = '#3377FF'}
+            >
+              Continue Playing
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

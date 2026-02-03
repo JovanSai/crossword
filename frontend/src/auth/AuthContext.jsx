@@ -14,6 +14,15 @@ export function AuthProvider({ children }) {
     setAuthToken(data.token)
     setToken(data.token)
     setUser(data.user)
+    // Store full user profile for game submissions
+    if (data.user) {
+      localStorage.setItem('userProfile', JSON.stringify({
+        email: data.user.username,
+        id: data.user.id,
+        username: data.user.username
+      }))
+      localStorage.setItem('userEmail', data.user.username)
+    }
   }, [])
 
   const refresh = useCallback(async () => {
@@ -72,6 +81,9 @@ export function AuthProvider({ children }) {
       }
     }
 
+    localStorage.removeItem('userProfile')
+    localStorage.removeItem('userEmail')
+    localStorage.removeItem('sessionID')
     setToken(null)
     setUser(null)
     setMember(null)

@@ -38,7 +38,10 @@ ALLOWED_HOSTS = ['localhost','127.0.0.1', 'localhost:5173']
 # Application definition
 
 INSTALLED_APPS = [
+    'django.contrib.contenttypes',
+    'django.contrib.auth',
     'django.contrib.staticfiles',
+    'rest_framework',
     'hackathon',
 ]
 
@@ -111,3 +114,9 @@ STATICFILES_DIRS = [BASE_DIR.parent / 'frontend']
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Django REST Framework configuration
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [],
+    'DEFAULT_PERMISSION_CLASSES': [],
+}
