@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import html2canvas from "html2canvas";
 import { useAuth } from "../auth/AuthContext";
 import { RiAccountCircleLine } from "react-icons/ri";
-import "./scorecard.css";
+import "./roundscorecard.css";
 
 export default function RoundScoreCard() {
   const location = useLocation();
