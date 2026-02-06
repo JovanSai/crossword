@@ -1,0 +1,135 @@
+.roundscorecard-page {
+  min-height: 100vh;
+  background: #f4f7ff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: "Inter", sans-serif;
+}
+
+.roundscorecard {
+  background: white;
+  padding: 40px;
+  border-radius: 20px;
+  width: 100%;
+  max-width: 700px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.08);
+  text-align: center;
+}
+
+.heading {
+  font-size: 28px;
+  font-weight: 700;
+  color: #3377ff;
+  margin-bottom: 30px;
+}
+
+/* Circle chart */
+.circle-container {
+  width: 220px;
+  height: 220px;
+  margin: 0 auto 30px;
+  border-radius: 50%;
+  background: conic-gradient(#3377ff 0deg, #e6ecf5 0deg);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+
+.circle-container::before {
+  content: "";
+  position: absolute;
+  width: 170px;
+  height: 170px;
+  background: white;
+  border-radius: 50%;
+}
+
+.center-text {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+}
+
+.label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #7a8bbf;
+}
+
+.score {
+  font-size: 42px;
+  font-weight: 800;
+  color: #1a2b6b;
+  margin: 6px 0;
+}
+
+.view-details {
+  font-size: 13px;
+  color: #3377ff;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.view-details:hover {
+  text-decoration: underline;
+}
+
+/* Buttons */
+.buttons {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 25px;
+}
+
+.primary,
+.secondary {
+  flex: 1;
+  padding: 12px 0;
+  border-radius: 12px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.primary {
+  background: linear-gradient(135deg, #3377ff, #5f95ff);
+  color: white;
+}
+
+.primary:hover {
+  opacity: 0.9;
+}
+
+.secondary {
+  background: #eef3ff;
+  color: #3377ff;
+}
+
+.secondary:hover {
+  background: #e0e9ff;
+}
+
+/* Responsive */
+@media (max-width: 500px) {
+  .roundscorecard {
+    padding: 25px;
+  }
+
+  .circle-container {
+    width: 190px;
+    height: 190px;
+  }
+
+  .circle-container::before {
+    width: 145px;
+    height: 145px;
+  }
+
+  .score {
+    font-size: 34px;
+  }
+}
